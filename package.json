@@ -1,6 +1,6 @@
 {
   "name": "seamstress",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "tools for weaving and generating lists from a set of rules",
   "source": "src/index.js",
   "type": "module",
