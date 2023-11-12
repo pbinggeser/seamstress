@@ -1,0 +1,37 @@
+{
+  "name": "seamstress",
+  "version": "1.0.0",
+  "description": "tools for weaving and generating lists from a set of rules",
+  "source": "src/index.js",
+  "type": "module",
+  "main": "./dist/cjs/main.cjs",
+  "module": "./dist/esm/main.js",
+  "exports": {
+    ".": {
+      "import": "./dist/esm/main.js",
+      "require": "./dist/cjs/main.cjs"
+    }
+  },
+  "repository": "https://pbinggeser@github.com/pbinggeser/seamstress.git",
+  "author": "Peter Binggeser <peter@binggeser.com>",
+  "license": "MIT",
+  "scripts": {
+    "watch": "parcel watch",
+    "build": "parcel build"
+  },
+  "devDependencies": {
+    "parcel": "^2.10.2"
+  },
+  "keywords": [
+    "permutations",
+    "array",
+    "manipulation",
+    "combinations",
+    "list"
+  ],
+  "targets": {
+    "main": {
+      "optimize": true
+    }
+  }
+}
