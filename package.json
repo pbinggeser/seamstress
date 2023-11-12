@@ -1,6 +1,6 @@
 {
   "name": "seamstress",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "tools for weaving and generating lists from a set of rules",
   "source": "src/index.js",
   "type": "module",
@@ -17,9 +17,12 @@
   "license": "MIT",
   "scripts": {
     "watch": "parcel watch",
-    "build": "parcel build"
+    "build": "parcel build",
+    "test": "mocha"
   },
   "devDependencies": {
+    "chai": "^4.3.10",
+    "mocha": "^10.2.0",
     "parcel": "^2.10.2"
   },
   "keywords": [

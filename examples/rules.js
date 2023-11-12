@@ -8,12 +8,6 @@ let inputObject = {
 let options = {
   rules: [
     {
-      if: ['color', '==', ['red', 'green']],
-      then: { 
-        size: ['medium', 'large'] 
-      }
-    },
-    {
       if: ['color', '!=', 'red'],
       then: { 
         size: ['large'] 

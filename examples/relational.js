@@ -3,9 +3,14 @@ import { generatePermutations  } from "../dist/esm/main.js";
 let inputObject = {
   color: ['red', 'green', 'blue'],
   size: ['small', 'medium', 'large'],
-  count: {
+  count1: {
     min: 1,
-    max: 10,
+    max: 3,
+    step: 1,
+  },
+  count2: {
+    min: 1,
+    max: 3,
     step: 1,
   },
 };
@@ -13,13 +18,12 @@ let inputObject = {
 let options = {
   rules: [
     {
-      if: ['count', '>', 4],
+      if: p => p.count1 > p.count2,
       then: { 
-        size: ['medium', 'large'],
-        color: 'red'
+        color: ['red']
       }
     }
-  ],
+  ]
 };
 
 let permutations = generatePermutations(inputObject, options);
