@@ -1,5 +1,7 @@
+const { DateTime } = require('luxon');
+
 export const generatePermutations = (rawInputObject, options = {}) => {
-  const inputObject = preprocessInput(JSON.parse(JSON.stringify(rawInputObject))); // Deep copy and preprocess
+  const {inputObject, fieldTypes} = preprocessInput(JSON.parse(JSON.stringify(rawInputObject))); // Deep copy and preprocess
 
 
   // Helper function to apply rules to current combination
@@ -17,7 +19,7 @@ export const generatePermutations = (rawInputObject, options = {}) => {
       } else if (Array.isArray(rule.if)) {
         const [field, operator, conditionValue] = rule.if;
         // Apply 'then' conditions if the operator-based 'if' condition is met
-        return checkRule(field, operator, conditionValue, permutation) ? checkThenConditions(rule.then, permutation) : true;
+        return checkRule(field, operator, conditionValue, permutation, inputObject) ? checkThenConditions(rule.then, permutation) : true;
       } else {
         // Throw an error if the rule format is not recognized
         throw new Error('Invalid rule format: "if" should be a function or an array.');
@@ -26,23 +28,49 @@ export const generatePermutations = (rawInputObject, options = {}) => {
   }
 
   // Adjusted checkRule function to directly accept the parameters instead of the rule object
-  function checkRule(field, operator, conditionValue, permutation) {
+  function checkRule(field, operator, conditionValue, permutation, inputObject) {
+    // console.log(field, operator, conditionValue, permutation, inputObject);
     function checkCondition(operator, fieldValue, testValue) {
-      switch (operator) {
-        case '==':
-          return fieldValue == testValue;
-        case '!=':
-          return fieldValue != testValue;
-        case '<':
-          return fieldValue < testValue;
-        case '<=':
-          return fieldValue <= testValue;
-        case '>':
-          return fieldValue > testValue;
-        case '>=':
-          return fieldValue >= testValue;
-        default:
-          throw new Error(`Invalid operator "${operator}" used in rule definition.`);
+      if (fieldTypes[field] === 'date') {
+        let fieldValue = DateTime.fromISO(permutation[field], { zone: 'utc' });
+        let testValue = DateTime.fromISO(conditionValue, { zone: 'utc' });
+        console.log(fieldValue, testValue);
+    
+        // Perform comparison based on Luxon's DateTime comparison methods
+        switch (operator) {
+          case '==':
+            return fieldValue.equals(testValue);
+          case '!=':
+            return !fieldValue.equals(testValue);
+          case '<':
+            return fieldValue < testValue;
+          case '<=':
+            return fieldValue <= testValue;
+          case '>':
+            return fieldValue > testValue;
+          case '>=':
+            return fieldValue >= testValue;
+          default:
+            throw new Error(`Invalid operator "${operator}" for date comparison.`);
+        }
+      } else {
+          
+        switch (operator) {
+          case '==':
+            return fieldValue == testValue;
+          case '!=':
+            return fieldValue != testValue;
+          case '<':
+            return fieldValue < testValue;
+          case '<=':
+            return fieldValue <= testValue;
+          case '>':
+            return fieldValue > testValue;
+          case '>=':
+            return fieldValue >= testValue;
+          default:
+            throw new Error(`Invalid operator "${operator}" used in rule definition.`);
+        }
       }
     }
 
@@ -121,21 +149,52 @@ export const generatePermutations = (rawInputObject, options = {}) => {
 
 
 const preprocessInput = (inputObject) => {
+
+  let fieldTypes = {};
+
   // Function to convert range definition to an array
   const rangeToArray = (range) => {
-    const { min, max, step } = range;
-    let arr = [];
-    for (let value = min; value <= max; value += step) {
-      arr.push(value);
+    if (range.datetime) { // Check if the range is for datetime values
+      const { min, max, step, format } = range;
+      let arr = [];
+      let current = DateTime.fromISO(min, { zone: 'utc' });
+      const end = DateTime.fromISO(max, { zone: 'utc' });
+      const stepDuration = DateTime.fromObject(step); // Create a duration object for stepping
+
+      if (!current.isValid || !end.isValid) {
+        throw new Error('Invalid DateTime range: Ensure "min" and "max" are valid ISO8601 strings.');
+      }
+
+      while (current <= end) {
+        arr.push(format ? current.toFormat(format) : current.toISO());
+        current = current.plus(step); // Ensure the 'step' object is a valid duration for Luxon
+      }
+      return arr;
+    } else {
+      // Handle numeric range...
+      const { min, max, step } = range;
+      let arr = [];
+      for (let value = min; value <= max; value += step) {
+        arr.push(value);
+      }
+      return arr;
     }
-    return arr;
+
   };
 
   // Process each field of the input object
   for (const key in inputObject) {
     if (inputObject.hasOwnProperty(key)) {
       const value = inputObject[key];
+      fieldTypes = { ...fieldTypes, [key]: 'string' };
       if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+        
+        if(value.datetime){
+          fieldTypes = { ...fieldTypes, [key]: 'date' };
+        } else {
+          fieldTypes = { ...fieldTypes, [key]: 'number' };
+        }
+
         // Convert range object to array if min, max, and step are present
         if ('min' in value && 'max' in value && 'step' in value) {
           inputObject[key] = rangeToArray(value);
@@ -145,5 +204,17 @@ const preprocessInput = (inputObject) => {
       }
     }
   }
-  return inputObject; // Return the processed input object
+
+  // Add a tag to mark the field as a date field
+  for (const key in inputObject) {
+    if (inputObject.hasOwnProperty(key)) {
+      const field = inputObject[key];
+      if (field && typeof field === 'object' && !Array.isArray(field) && field.datetime) {
+        // Convert date range definitions to arrays and tag as date fields
+        
+      }
+    }
+  }
+
+  return {inputObject, fieldTypes}; // Return the processed input object
 };

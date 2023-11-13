@@ -1,10 +1,16 @@
 # seamstress
 
-Seamstress is a versatile Node.js library for generating permutations of input data. It allows developers to provide an object with fields containing arrays or numeric ranges and outputs an array of objects covering every possible combination. Seamstress also supports conditional rules and filtering for advanced list manipulations.
+Seamstress is a versatile Node.js library for generating permutations of input data. It allows developers to provide an object with fields containing arrays, numeric ranges, or date-time ranges and outputs an array of objects covering every possible combination. Seamstress also supports conditional rules and filtering for advanced list manipulations.
+
+## Features
+
+- Generate permutations for arrays of values.
+- Generate permutations for numeric ranges, including support for min, max, and step configuration.
+- Generate permutations for date-time ranges with customizable output formatting.
+- Apply conditional rules to include or exclude certain permutations based on simple or complex logic.
+- Apply filters to the final set of permutations for additional custom post-processing.
 
 ## Installation
-
-Install seamstress using npm:
 
 ```bash
 npm install seamstress
@@ -91,6 +97,43 @@ const inputObjectWithNumericRanges = {
 
 // ... (usage with numeric ranges and rules as above)
 ```
+
+### Generating Date-Time Ranges
+Seamstress can generate permutations including date-time ranges by using Luxon for date parsing and formatting. Simply set datetime: true in your range object and provide min, max, and step values as ISO date strings. You can also specify the output format for date-time values using Luxon's formatting tokens.
+
+```javascript
+const inputObject = {
+  eventDates: {
+    min: '2021-01-01',           // Start date in ISO format
+    max: '2021-01-05',           // End date in ISO format
+    step: { days: 1 },           // Step by one day
+    datetime: true,              // Indicate that this is a date-time range
+    format: 'dd LLL yyyy'        // Output format using Luxon's tokens
+  },
+  color: ['red', 'green']
+};
+```
+
+This will generate permutations where eventDates are formatted as "01 Jan 2021", "02 Jan 2021", etc., and combined with each value in the color array.
+
+### Rules for Date-Time Fields
+When defining rules that compare date-time fields, simply use the field name in your rule definition. Seamstress will automatically handle the comparison logic for date fields.
+
+Example of a rule using date-time comparison:
+
+```javascript
+const options = {
+  rules: [
+    {
+      if: ['startDate', '>', '2020-01-03'],
+      then: { location: ['New York', 'Berlin'] }
+    }
+  ],
+  // ... other options ...
+};
+```
+This rule restricts permutations to only include those where the startDate is after '2020-01-03', and only for 'New York' or 'Berlin' locations.
+
 
 ### Applying Filters
 

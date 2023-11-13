@@ -56,3 +56,47 @@ describe('generatePermutations', function() {
   
 });
 
+
+describe('generatePermutations with date ranges', function() {
+  it('should generate permutations with date ranges using default ISO format', function() {
+    const inputObject = {
+      eventDates: {
+        min: '2021-01-01',
+        max: '2021-01-03',
+        step: { days: 1 },
+        datetime: true
+      },
+      color: ['red', 'green']
+    };
+
+    const permutations = generatePermutations(inputObject);
+    // Check if the dates are in ISO format and the expected length of permutations is correct
+    const isoDateRegex = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z/;
+    permutations.forEach(permutation => {
+      expect(permutation.eventDates).to.match(isoDateRegex);
+    });
+    expect(permutations).to.have.lengthOf(6); // 3 dates * 2 colors
+  });
+
+  it('should generate permutations with date ranges and custom format', function() {
+    const inputObject = {
+      eventDates: {
+        min: '2021-01-01T00:00:00Z',
+        max: '2021-01-03T00:00:00Z',
+        step: { days: 1 },
+        datetime: true,
+        format: 'dd LLL yyyy' // Custom format e.g., "01 Jan 2021"
+      },
+      color: ['red']
+    };
+
+    const permutations = generatePermutations(inputObject);
+    // Verify that the formatted dates match the expected output
+    expect(permutations).to.deep.include.members([
+      { eventDates: '01 Jan 2021', color: 'red' },
+      { eventDates: '02 Jan 2021', color: 'red' },
+      { eventDates: '03 Jan 2021', color: 'red' }
+    ]);
+    expect(permutations).to.have.lengthOf(3); // 3 dates
+  });
+});

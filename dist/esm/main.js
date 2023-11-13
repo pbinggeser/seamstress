@@ -1,3 +1,5 @@
+import {DateTime as $6XpKT$DateTime} from "luxon";
+
 
 function $parcel$export(e, n, v, s) {
   Object.defineProperty(e, n, {get: v, set: s, enumerable: true, configurable: true});
@@ -5,8 +7,10 @@ function $parcel$export(e, n, v, s) {
 var $66424aceb4e50b60$exports = {};
 
 $parcel$export($66424aceb4e50b60$exports, "generatePermutations", () => $66424aceb4e50b60$export$c2e8d36f4b1181be);
+
+var $66424aceb4e50b60$require$DateTime = $6XpKT$DateTime;
 const $66424aceb4e50b60$export$c2e8d36f4b1181be = (rawInputObject, options = {})=>{
-    const inputObject = $66424aceb4e50b60$var$preprocessInput(JSON.parse(JSON.stringify(rawInputObject))); // Deep copy and preprocess
+    const { inputObject: inputObject, fieldTypes: fieldTypes } = $66424aceb4e50b60$var$preprocessInput(JSON.parse(JSON.stringify(rawInputObject))); // Deep copy and preprocess
     // Helper function to apply rules to current combination
     function applyRules(rules, permutation) {
         return rules.every((rule)=>{
@@ -19,15 +23,41 @@ const $66424aceb4e50b60$export$c2e8d36f4b1181be = (rawInputObject, options = {})
             } else if (Array.isArray(rule.if)) {
                 const [field, operator, conditionValue] = rule.if;
                 // Apply 'then' conditions if the operator-based 'if' condition is met
-                return checkRule(field, operator, conditionValue, permutation) ? checkThenConditions(rule.then, permutation) : true;
+                return checkRule(field, operator, conditionValue, permutation, inputObject) ? checkThenConditions(rule.then, permutation) : true;
             } else // Throw an error if the rule format is not recognized
             throw new Error('Invalid rule format: "if" should be a function or an array.');
         });
     }
     // Adjusted checkRule function to directly accept the parameters instead of the rule object
-    function checkRule(field, operator, conditionValue, permutation) {
+    function checkRule(field, operator, conditionValue, permutation, inputObject) {
+        // console.log(field, operator, conditionValue, permutation, inputObject);
         function checkCondition(operator, fieldValue, testValue) {
-            switch(operator){
+            if (fieldTypes[field] === "date") {
+                let fieldValue = $66424aceb4e50b60$require$DateTime.fromISO(permutation[field], {
+                    zone: "utc"
+                });
+                let testValue = $66424aceb4e50b60$require$DateTime.fromISO(conditionValue, {
+                    zone: "utc"
+                });
+                console.log(fieldValue, testValue);
+                // Perform comparison based on Luxon's DateTime comparison methods
+                switch(operator){
+                    case "==":
+                        return fieldValue.equals(testValue);
+                    case "!=":
+                        return !fieldValue.equals(testValue);
+                    case "<":
+                        return fieldValue < testValue;
+                    case "<=":
+                        return fieldValue <= testValue;
+                    case ">":
+                        return fieldValue > testValue;
+                    case ">=":
+                        return fieldValue >= testValue;
+                    default:
+                        throw new Error(`Invalid operator "${operator}" for date comparison.`);
+                }
+            } else switch(operator){
                 case "==":
                     return fieldValue == testValue;
                 case "!=":
@@ -104,23 +134,63 @@ const $66424aceb4e50b60$export$c2e8d36f4b1181be = (rawInputObject, options = {})
     return allPermutations;
 };
 const $66424aceb4e50b60$var$preprocessInput = (inputObject)=>{
+    let fieldTypes = {};
     // Function to convert range definition to an array
     const rangeToArray = (range)=>{
-        const { min: min, max: max, step: step } = range;
-        let arr = [];
-        for(let value = min; value <= max; value += step)arr.push(value);
-        return arr;
+        if (range.datetime) {
+            const { min: min, max: max, step: step, format: format } = range;
+            let arr = [];
+            let current = $66424aceb4e50b60$require$DateTime.fromISO(min, {
+                zone: "utc"
+            });
+            const end = $66424aceb4e50b60$require$DateTime.fromISO(max, {
+                zone: "utc"
+            });
+            const stepDuration = $66424aceb4e50b60$require$DateTime.fromObject(step); // Create a duration object for stepping
+            if (!current.isValid || !end.isValid) throw new Error('Invalid DateTime range: Ensure "min" and "max" are valid ISO8601 strings.');
+            while(current <= end){
+                arr.push(format ? current.toFormat(format) : current.toISO());
+                current = current.plus(step); // Ensure the 'step' object is a valid duration for Luxon
+            }
+            return arr;
+        } else {
+            // Handle numeric range...
+            const { min: min, max: max, step: step } = range;
+            let arr = [];
+            for(let value = min; value <= max; value += step)arr.push(value);
+            return arr;
+        }
     };
     // Process each field of the input object
     for(const key in inputObject)if (inputObject.hasOwnProperty(key)) {
         const value = inputObject[key];
+        fieldTypes = {
+            ...fieldTypes,
+            [key]: "string"
+        };
         if (typeof value === "object" && value !== null && !Array.isArray(value)) {
+            if (value.datetime) fieldTypes = {
+                ...fieldTypes,
+                [key]: "date"
+            };
+            else fieldTypes = {
+                ...fieldTypes,
+                [key]: "number"
+            };
             // Convert range object to array if min, max, and step are present
             if ("min" in value && "max" in value && "step" in value) inputObject[key] = rangeToArray(value);
             else throw new Error(`Invalid range object for field '${key}'. Must contain min, max, and step properties.`);
         }
     }
-    return inputObject; // Return the processed input object
+    // Add a tag to mark the field as a date field
+    for(const key in inputObject)if (inputObject.hasOwnProperty(key)) {
+        const field = inputObject[key];
+        field && typeof field === "object" && !Array.isArray(field) && field.datetime;
+    }
+    return {
+        inputObject: inputObject,
+        fieldTypes: fieldTypes
+    }; // Return the processed input object
 };
 
 
