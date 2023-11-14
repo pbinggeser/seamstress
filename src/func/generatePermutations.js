@@ -143,10 +143,32 @@ export const generatePermutations = (rawInputObject, options = {}) => {
     }
   }
 
+
+  if (options.sampleSize && Number.isInteger(options.sampleSize)) {
+    return samplePermutations(allPermutations, options.sampleSize);
+  } 
+
   // Generate and return permutations with rules applied
   return allPermutations;
 }
 
+// Function to shuffle an array
+function shuffleArray(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]]; // Swap elements
+  }
+  return array;
+}
+
+// Function to sample N random permutations from the full list
+function samplePermutations(permutations, sampleSize) {
+  if (sampleSize >= permutations.length) {
+    return permutations; // If sample size is greater than available permutations, return all
+  }
+  // Shuffle the array and then slice it to get a sample
+  return shuffleArray(permutations).slice(0, sampleSize);
+}
 
 const preprocessInput = (inputObject) => {
 

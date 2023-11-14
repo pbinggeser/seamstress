@@ -52,6 +52,7 @@ const permutations = generatePermutations(inputObject);
 console.log(permutations);
 ```
 
+
 ### With Rules
 
 Rules allow you to conditionally limit the permutations based on logical relations between fields. You can use simple comparisons or provide a function for complex logic.
@@ -80,6 +81,7 @@ const optionsWithFunctionRules = {
 const permutationsWithRules = seamstress.generatePermutations(inputObject, optionsWithFunctionRules);
 console.log(permutationsWithRules);
 ```
+---
 
 ### With Numeric Generated Data and Rules
 
@@ -97,6 +99,7 @@ const inputObjectWithNumericRanges = {
 
 // ... (usage with numeric ranges and rules as above)
 ```
+
 
 ### Generating Date-Time Ranges
 Seamstress can generate permutations including date-time ranges by using Luxon for date parsing and formatting. Simply set datetime: true in your range object and provide min, max, and step values as ISO date strings. You can also specify the output format for date-time values using Luxon's formatting tokens.
@@ -116,6 +119,8 @@ const inputObject = {
 
 This will generate permutations where eventDates are formatted as "01 Jan 2021", "02 Jan 2021", etc., and combined with each value in the color array.
 
+
+
 ### Rules for Date-Time Fields
 When defining rules that compare date-time fields, simply use the field name in your rule definition. Seamstress will automatically handle the comparison logic for date fields.
 
@@ -134,6 +139,7 @@ const options = {
 ```
 This rule restricts permutations to only include those where the startDate is after '2020-01-03', and only for 'New York' or 'Berlin' locations.
 
+---
 
 ### Applying Filters
 
@@ -152,6 +158,38 @@ const filteredPermutations = seamstress.generatePermutations(inputObject, option
 console.log(filteredPermutations);
 ```
 
+---
+
+## Sampling Permutations
+
+For cases where the total number of permutations is large, and you are interested in working with only a subset of those permutations, Seamstress provides a feature to obtain a random sample of the generated permutations.
+
+To use this feature, simply specify a `sampleSize` in your options object when calling `generatePermutations`. The library will then return a random subset of permutations with a length equal to `sampleSize`.
+
+Here's an example of how to use the sampling feature:
+
+```javascript
+const { generatePermutations } = require('seamstress');
+
+let inputObject = {
+  // ... your input definitions ...
+};
+
+let options = {
+  // ... other options, such as rules and filters ...
+  sampleSize: 50 // The desired sample size of the result set
+};
+
+let sampledPermutations = generatePermutations(inputObject, options);
+console.log(sampledPermutations); // Outputs a random sample of 50 permutations
+```
+
+This feature is particularly useful when dealing with date-time ranges or large datasets where generating all permutations is impractical. By using sampleSize, you can control the output to only receive a manageable number of permutations, which is random and varied each time generatePermutations is called.
+
+Remember, the sampling is performed after all permutations have been generated and any rules or filters have been applied, ensuring that the sample is representative of the filtered permutation space.
+
+
+
 ## API Reference
 
 ### `generatePermutations(inputObject, options)`
@@ -161,7 +199,10 @@ Generates an array of permutations based on the provided input object and option
 #### Parameters
 
 - `inputObject`: An object with fields containing arrays of possible values or objects describing a numeric range with `min`, `max`, and `step` properties.
-- `options` (optional): An object that can contain a `rules` array to conditionally limit the permutations based on the values and a `filters` array to apply additional filtering.
+- `options` (optional): An object that can contain:
+  - `rules`: array of objects to conditionally limit the permutations based on the values
+  - `filters`: array of functions to apply additional filtering
+  - `sampleSize`: integer that when set will return a random sample of the generated list of this length
 
 #### Return Value
 

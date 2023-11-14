@@ -130,9 +130,27 @@ const $66424aceb4e50b60$export$c2e8d36f4b1181be = (rawInputObject, options = {})
     for(let key in inputObject){
         if (!Array.isArray(inputObject[key])) throw new TypeError(`Value for ${key} must be an array.`);
     }
+    if (options.sampleSize && Number.isInteger(options.sampleSize)) return $66424aceb4e50b60$var$samplePermutations(allPermutations, options.sampleSize);
     // Generate and return permutations with rules applied
     return allPermutations;
 };
+// Function to shuffle an array
+function $66424aceb4e50b60$var$shuffleArray(array) {
+    for(let i = array.length - 1; i > 0; i--){
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [
+            array[j],
+            array[i]
+        ]; // Swap elements
+    }
+    return array;
+}
+// Function to sample N random permutations from the full list
+function $66424aceb4e50b60$var$samplePermutations(permutations, sampleSize) {
+    if (sampleSize >= permutations.length) return permutations; // If sample size is greater than available permutations, return all
+    // Shuffle the array and then slice it to get a sample
+    return $66424aceb4e50b60$var$shuffleArray(permutations).slice(0, sampleSize);
+}
 const $66424aceb4e50b60$var$preprocessInput = (inputObject)=>{
     let fieldTypes = {};
     // Function to convert range definition to an array
